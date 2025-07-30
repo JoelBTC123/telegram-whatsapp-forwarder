@@ -22,4 +22,4 @@ module.exports = {
             whatsapp_name: '🎖️VIP FOREX'
         }
     }
-};
+}; 

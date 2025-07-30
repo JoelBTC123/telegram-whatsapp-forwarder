@@ -4,8 +4,7 @@
   "description": "Bot para reenviar mensajes de Telegram a WhatsApp",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "get-channel-id": "node getChannelId.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
@@ -15,4 +14,4 @@
   "keywords": ["telegram", "whatsapp", "bot"],
   "author": "",
   "license": "MIT"
-}
+} 
