@@ -124,9 +124,10 @@ const server = http.createServer((req, res) => {
 
 // Puerto para Railway (usar variable de entorno o 3000 por defecto)
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Servidor web iniciado en puerto ${PORT}`);
-    console.log(`📊 Healthcheck disponible en: http://localhost:${PORT}`);
+    console.log(`📊 Healthcheck disponible en: http://0.0.0.0:${PORT}`);
+    console.log(`🌍 URL pública: https://telegram-whatsapp-bot-production.up.railway.app`);
     console.log('');
 });
 
@@ -135,7 +136,10 @@ const telegramBot = new TelegramBot(config.TELEGRAM_BOT_TOKEN, config.BOT_CONFIG
 
 // Crear instancia del cliente de WhatsApp
 const whatsappClient = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth({
+        clientId: 'telegram-whatsapp-bot',
+        dataPath: './.wwebjs_auth'
+    }),
     puppeteer: {
         headless: true,
         args: [

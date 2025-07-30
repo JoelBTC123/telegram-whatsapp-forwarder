@@ -11,8 +11,8 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# WhatsApp session data
-.wwebjs_auth/
+# WhatsApp session data (comentado para permitir subir la sesión)
+# .wwebjs_auth/
 .wwebjs_cache/
 
 # Logs
