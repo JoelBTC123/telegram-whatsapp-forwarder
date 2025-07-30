@@ -14,10 +14,112 @@ Object.keys(config.GROUPS).forEach(groupKey => {
 });
 console.log('');
 
-// Crear servidor HTTP simple para healthcheck
+// Variable global para almacenar el QR
+let qrCodeData = null;
+
+// Crear servidor HTTP simple para healthcheck y QR
 const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Bot funcionando correctamente! 🤖');
+    if (req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Bot funcionando correctamente! 🤖');
+    } else if (req.url === '/qr') {
+        if (qrCodeData) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>WhatsApp QR Code</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            text-align: center; 
+                            background: #f0f0f0; 
+                            padding: 20px;
+                        }
+                        .container { 
+                            background: white; 
+                            padding: 30px; 
+                            border-radius: 10px; 
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            max-width: 500px;
+                            margin: 0 auto;
+                        }
+                        h1 { color: #25D366; }
+                        pre { 
+                            font-size: 8px; 
+                            line-height: 8px; 
+                            margin: 20px 0;
+                            background: white;
+                            padding: 20px;
+                            border: 1px solid #ddd;
+                            border-radius: 5px;
+                        }
+                        .instructions {
+                            background: #e8f5e8;
+                            padding: 15px;
+                            border-radius: 5px;
+                            margin-top: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>📱 WhatsApp QR Code</h1>
+                        <p>Escanea este código QR con WhatsApp para conectar el bot:</p>
+                        <pre>${qrCodeData}</pre>
+                        <div class="instructions">
+                            <strong>Instrucciones:</strong><br>
+                            1. Abre WhatsApp en tu teléfono<br>
+                            2. Ve a Configuración > Dispositivos vinculados<br>
+                            3. Escanea el código QR de arriba<br>
+                            4. ¡Listo! El bot estará conectado
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>WhatsApp QR Code</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            text-align: center; 
+                            background: #f0f0f0; 
+                            padding: 20px;
+                        }
+                        .container { 
+                            background: white; 
+                            padding: 30px; 
+                            border-radius: 10px; 
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            max-width: 500px;
+                            margin: 0 auto;
+                        }
+                        h1 { color: #25D366; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>⏳ Esperando QR Code</h1>
+                        <p>El bot está iniciando. Recarga esta página en unos segundos.</p>
+                        <script>
+                            setTimeout(() => window.location.reload(), 3000);
+                        </script>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+    } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not found');
+    }
 });
 
 // Puerto para Railway (usar variable de entorno o 3000 por defecto)
@@ -91,6 +193,12 @@ function setupWhatsApp() {
     whatsappClient.on('qr', (qr) => {
         console.log('📱 Escanea este código QR con WhatsApp:');
         qrcode.generate(qr, { small: true });
+        
+        // Guardar el QR para mostrarlo en la web
+        qrCodeData = qr;
+        console.log('');
+        console.log('🌐 QR Code disponible en: /qr');
+        console.log('📱 Abre tu navegador y ve a la URL del bot + /qr');
         console.log('');
     });
 

@@ -19,24 +19,24 @@ telegramBot.on('channel_post', (post) => {
     console.log('   📝 Username:', post.chat.username);
     console.log('   📅 Fecha:', new Date(post.date * 1000).toLocaleString());
     console.log('   📝 Texto:', post.text ? post.text.substring(0, 100) + '...' : 'Sin texto');
-    console.log('');
+        console.log('');
     console.log('💾 Agrega este ID a config.js:');
     console.log(`   CHANNEL_ID: ${post.chat.id}`);
-    console.log('');
+        console.log('');
 });
-
+        
 // También escuchar mensajes editados
 telegramBot.on('edited_channel_post', (post) => {
     console.log('✏️ Mensaje editado del canal:');
     console.log('   🆔 ID del canal:', post.chat.id);
     console.log('   📝 Nombre del canal:', post.chat.title);
-    console.log('');
-});
+            console.log('');
+        });
 
 console.log('⏳ Esperando mensajes del canal...');
 console.log('📢 Envía un mensaje en el canal para obtener su ID');
 console.log('🛑 Presiona Ctrl+C para detener');
-console.log('');
+            console.log('');
 
 // Manejar salida limpia
 process.on('SIGINT', () => {
