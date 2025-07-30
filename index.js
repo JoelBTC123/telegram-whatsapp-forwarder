@@ -3,6 +3,7 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const readline = require('readline');
 const https = require('https');
+const http = require('http');
 const config = require('./config');
 
 console.log('🚀 Iniciando bot de reenvío Telegram → WhatsApp...');
@@ -12,6 +13,20 @@ Object.keys(config.GROUPS).forEach(groupKey => {
     console.log(`   📱 ${group.telegram_name} → ${group.whatsapp_name}`);
 });
 console.log('');
+
+// Crear servidor HTTP simple para healthcheck
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Bot funcionando correctamente! 🤖');
+});
+
+// Puerto para Railway (usar variable de entorno o 3000 por defecto)
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`🌐 Servidor web iniciado en puerto ${PORT}`);
+    console.log(`📊 Healthcheck disponible en: http://localhost:${PORT}`);
+    console.log('');
+});
 
 // Crear instancia del bot de Telegram
 const telegramBot = new TelegramBot(config.TELEGRAM_BOT_TOKEN, config.BOT_CONFIG);
