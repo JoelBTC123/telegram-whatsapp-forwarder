@@ -1,5 +1,5 @@
 module.exports = {
-    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '7938128906:AAE8mBqLVmbP3tv6i08fDJ_LsUYRJfFZt50',
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '7938128906:AAE8mBqLVmbP3tv6i08fDJ_LsUYRJfFZt50', // Token del fowardtradify_bot
     BOT_CONFIG: {
         polling: true,
         parse_mode: 'HTML'

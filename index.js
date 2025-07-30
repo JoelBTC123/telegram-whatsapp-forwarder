@@ -6,10 +6,17 @@ const https = require('https');
 const http = require('http');
 const config = require('./config');
 
+// Token del bot de Telegram (fowardtradify_bot)
+const TELEGRAM_TOKEN = '7938128906:AAE8mBqLVmbP3tv6i08fDJ_LsUYRJfFZt50';
+
 // ID del usuario de Telegram para enviar el QR
-const TELEGRAM_USER_ID = 'joeybtc99'; // Usuario de Telegram
+const TELEGRAM_USER_ID = '811637105'; // ID numérico de Telegram
 
 console.log('🚀 Iniciando bot de reenvío Telegram → WhatsApp...');
+
+// Verificar token que se está usando
+console.log(`🔑 Token que se está usando: ${TELEGRAM_TOKEN.substring(0, 20)}...`);
+console.log('');
 
 // Mostrar grupos configurados
 console.log('📋 Grupos configurados:');
@@ -99,7 +106,7 @@ server.listen(PORT, '0.0.0.0', () => {
 });
 
 // Crear bot de Telegram
-const telegramBot = new TelegramBot(config.TELEGRAM_BOT_TOKEN, config.BOT_CONFIG);
+const telegramBot = new TelegramBot(TELEGRAM_TOKEN, config.BOT_CONFIG);
 
 // Variables globales
 let whatsappReady = false;
@@ -266,7 +273,10 @@ telegramBot.getMe().then((botInfo) => {
     console.log(`🔗 Username: ${botInfo.username}`);
     console.log('');
     
-    setupTelegramListener();
+    // Esperar un poco antes de configurar el listener
+    setTimeout(() => {
+        setupTelegramListener();
+    }, 2000);
 }).catch((error) => {
     console.error('❌ Error conectando bot de Telegram:', error.message);
     process.exit(1);
@@ -319,7 +329,7 @@ async function sendQRToTelegram(qrData) {
         });
         
         console.log('✅ QR enviado exitosamente a Telegram');
-        console.log(`📱 Revisa tu Telegram: @${TELEGRAM_USER_ID}`);
+        console.log(`📱 Revisa tu Telegram (ID: ${TELEGRAM_USER_ID})`);
     } catch (error) {
         console.error('❌ Error enviando QR por Telegram:', error.message);
         // Si falla, mostrar QR en consola como respaldo
@@ -370,6 +380,19 @@ whatsappClient.on('disconnected', (reason) => {
 whatsappClient.initialize().catch((error) => {
     console.error('❌ Error inicializando WhatsApp:', error.message);
     // No salir del proceso, solo loggear el error
+});
+
+// Manejar errores de polling de Telegram
+telegramBot.on('polling_error', (error) => {
+    if (error.code === 'ETELEGRAM' && error.message.includes('409 Conflict')) {
+        console.log('⚠️ Conflicto de polling detectado, reiniciando en 5 segundos...');
+        setTimeout(() => {
+            console.log('🔄 Reiniciando bot...');
+            process.exit(0);
+        }, 5000);
+    } else {
+        console.error('❌ Error de polling:', error.message);
+    }
 });
 
 // Manejar errores no capturados
