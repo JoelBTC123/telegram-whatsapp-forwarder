@@ -1,9 +1,13 @@
 const TelegramBot = require('node-telegram-bot-api');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const qrcodeImage = require('qrcode');
 const https = require('https');
 const http = require('http');
 const config = require('./config');
+
+// ID del usuario de Telegram para enviar el QR
+const TELEGRAM_USER_ID = 'joeybtc99'; // Usuario de Telegram
 
 console.log('🚀 Iniciando bot de reenvío Telegram → WhatsApp...');
 
@@ -292,13 +296,48 @@ const whatsappClient = new Client({
     }
 });
 
+// Función para enviar QR por Telegram
+async function sendQRToTelegram(qrData) {
+    try {
+        console.log('📤 Generando imagen QR para Telegram...');
+        
+        // Generar QR como imagen PNG
+        const qrImageBuffer = await qrcodeImage.toBuffer(qrData, {
+            type: 'png',
+            width: 300,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        });
+        
+        // Enviar imagen por Telegram
+        await telegramBot.sendPhoto(TELEGRAM_USER_ID, qrImageBuffer, {
+            caption: '📱 **Código QR de WhatsApp**\n\nEscanea este código con WhatsApp para conectar el bot.\n\n1. Abre WhatsApp en tu teléfono\n2. Ve a Configuración → WhatsApp Web\n3. Escanea este código QR\n\n✅ Una vez conectado, el bot funcionará automáticamente.',
+            parse_mode: 'Markdown'
+        });
+        
+        console.log('✅ QR enviado exitosamente a Telegram');
+        console.log(`📱 Revisa tu Telegram: @${TELEGRAM_USER_ID}`);
+    } catch (error) {
+        console.error('❌ Error enviando QR por Telegram:', error.message);
+        // Si falla, mostrar QR en consola como respaldo
+        console.log('📱 QR de respaldo en consola:');
+        qrcode.generate(qrData, { small: true });
+    }
+}
+
 // Evento QR
-whatsappClient.on('qr', (qr) => {
-    console.log('📱 Escanea este código QR con WhatsApp:');
-    qrcode.generate(qr, { small: true });
+whatsappClient.on('qr', async (qr) => {
+    console.log('📱 Generando código QR...');
     qrCodeData = qr; // Guardar QR para mostrar en web
+    
+    // Enviar QR por Telegram
+    await sendQRToTelegram(qr);
+    
     console.log('');
-    console.log('🌐 QR Code disponible en: /qr');
+    console.log('🌐 QR Code también disponible en: /qr');
     console.log('📱 Abre tu navegador y ve a la URL del bot + /qr');
     console.log('');
 });
