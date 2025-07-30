@@ -86,7 +86,7 @@ const server = http.createServer((req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Servidor web iniciado en puerto ${PORT}`);
     console.log(`📊 Healthcheck disponible en: http://0.0.0.0:${PORT}`);
@@ -328,4 +328,18 @@ whatsappClient.on('disconnected', (reason) => {
 });
 
 // Inicializar WhatsApp
-whatsappClient.initialize(); 
+whatsappClient.initialize().catch((error) => {
+    console.error('❌ Error inicializando WhatsApp:', error.message);
+    // No salir del proceso, solo loggear el error
+});
+
+// Manejar errores no capturados
+process.on('uncaughtException', (error) => {
+    console.error('❌ Error no capturado:', error.message);
+    // No salir del proceso
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promesa rechazada no manejada:', reason);
+    // No salir del proceso
+}); 
