@@ -1,0 +1,29 @@
+# Archivos de desarrollo
+.git/
+.gitignore
+README.md
+monitor.js
+
+# Archivos de configuración local
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Archivos temporales
+.DS_Store
+Thumbs.db
+
+# Archivos de WhatsApp Web
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Archivos de debug
+debugToken.js
+getMyId.js
+getUserId.js
+testBot.js
+testMessages.js 
