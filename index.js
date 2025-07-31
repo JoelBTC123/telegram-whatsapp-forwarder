@@ -338,8 +338,31 @@ const whatsappClient = new Client({
             '--no-zygote',
             '--disable-gpu',
             '--disable-web-security',
-            '--disable-features=VizDisplayCompositor'
-        ]
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-field-trial-config',
+            '--disable-ipc-flooding-protection',
+            '--disable-hang-monitor',
+            '--disable-prompt-on-repost',
+            '--disable-client-side-phishing-detection',
+            '--disable-component-extensions-with-background-pages',
+            '--disable-default-apps',
+            '--disable-extensions',
+            '--disable-sync',
+            '--disable-translate',
+            '--hide-scrollbars',
+            '--mute-audio',
+            '--no-default-browser-check',
+            '--safebrowsing-disable-auto-update',
+            '--disable-blink-features=AutomationControlled',
+            '--disable-web-security',
+            '--allow-running-insecure-content',
+            '--disable-features=VizDisplayCompositor,VizHitTestSurfaceLayer'
+        ],
+        timeout: 60000,
+        protocolTimeout: 60000
     }
 });
 
@@ -379,6 +402,7 @@ async function sendQRToTelegram(qrData) {
 whatsappClient.on('qr', async (qr) => {
     console.log('📱 Generando código QR...');
     qrCodeData = qr; // Guardar QR para mostrar en web
+    whatsappReady = false; // Marcar como no listo cuando se genera QR
     
     // Enviar QR por Telegram
     await sendQRToTelegram(qr);
@@ -386,6 +410,7 @@ whatsappClient.on('qr', async (qr) => {
     console.log('');
     console.log('🌐 QR Code también disponible en: /qr');
     console.log('📱 Abre tu navegador y ve a la URL del bot + /qr');
+    console.log('⚠️ Esperando escaneo del QR...');
     console.log('');
 });
 
@@ -394,23 +419,55 @@ whatsappClient.on('ready', async () => {
     console.log('✅ WhatsApp conectado correctamente!');
     whatsappReady = true;
     
-    // Configurar grupos automáticamente
-    await configureWhatsAppGroups();
-    
-    console.log('🎉 Bot iniciado correctamente!');
-    console.log('📱 Escanea el código QR que aparecerá arriba');
-    console.log('✅ Los grupos se configurarán automáticamente');
+    try {
+        // Configurar grupos automáticamente
+        await configureWhatsAppGroups();
+        
+        console.log('🎉 Bot iniciado correctamente!');
+        console.log('✅ Los grupos se configurarán automáticamente');
+        
+        // Verificar que realmente estamos conectados
+        const info = await whatsappClient.info;
+        console.log(`📱 WhatsApp Web conectado como: ${info.pushname || 'Usuario'}`);
+        
+    } catch (error) {
+        console.error('❌ Error configurando grupos:', error.message);
+        whatsappReady = false;
+    }
+});
+
+// Evento authenticating
+whatsappClient.on('authenticating', () => {
+    console.log('🔐 Autenticando WhatsApp...');
+    whatsappReady = false;
 });
 
 // Evento auth_failure
 whatsappClient.on('auth_failure', (msg) => {
     console.error('❌ Error de autenticación de WhatsApp:', msg);
+    whatsappReady = false;
+    
+    // Reintentar después de un tiempo
+    setTimeout(() => {
+        console.log('🔄 Reintentando conexión de WhatsApp...');
+        whatsappClient.initialize().catch((error) => {
+            console.error('❌ Error reinicializando WhatsApp:', error.message);
+        });
+    }, 30000);
 });
 
 // Evento disconnected
 whatsappClient.on('disconnected', (reason) => {
     console.log('📱 WhatsApp desconectado:', reason);
     whatsappReady = false;
+    
+    // Reintentar conexión después de un tiempo
+    setTimeout(() => {
+        console.log('🔄 Reintentando conexión de WhatsApp después de desconexión...');
+        whatsappClient.initialize().catch((error) => {
+            console.error('❌ Error reconectando WhatsApp:', error.message);
+        });
+    }, 15000);
 });
 
 // Inicializar WhatsApp
