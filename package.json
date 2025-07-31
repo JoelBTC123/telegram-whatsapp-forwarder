@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "monitor": "node monitor.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "check-whatsapp": "node checkWhatsApp.js"
   },
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
