@@ -105,8 +105,17 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('');
 });
 
-// Crear bot de Telegram
-const telegramBot = new TelegramBot(TELEGRAM_TOKEN, config.BOT_CONFIG);
+// Crear bot de Telegram con configuración mejorada
+const telegramBot = new TelegramBot(TELEGRAM_TOKEN, {
+    ...config.BOT_CONFIG,
+    polling: {
+        ...config.BOT_CONFIG.polling,
+        timeout: 30,
+        limit: 100,
+        retryTimeout: 10000,
+        autoStart: false
+    }
+});
 
 // Variables globales
 let whatsappReady = false;
@@ -178,16 +187,30 @@ async function forwardToWhatsApp(telegramPost, groupKey) {
         // Construir mensaje
         let message = '';
         if (telegramPost.text) {
-            message = telegramPost.text;
+            message = telegramPost.text.trim();
         } else if (telegramPost.caption) {
-            message = telegramPost.caption;
+            message = telegramPost.caption.trim();
         }
 
         console.log(`📤 Reenviando mensaje a ${whatsappGroup.name}...`);
-        console.log(`   📝 Texto: ${message.substring(0, 50)}...`);
+        
+        // Verificar si hay contenido para enviar
+        const hasText = message && message.length > 0;
+        const hasPhoto = telegramPost.photo && telegramPost.photo.length > 0;
+        const hasDocument = telegramPost.document;
+        const hasVideo = telegramPost.video;
+        
+        if (!hasText && !hasPhoto && !hasDocument && !hasVideo) {
+            console.log('   ⚠️ No se encontró contenido para reenviar (texto, imagen, documento o video)');
+            return;
+        }
+
+        if (hasText) {
+            console.log(`   📝 Texto: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`);
+        }
 
         // Verificar si hay foto
-        if (telegramPost.photo && telegramPost.photo.length > 0) {
+        if (hasPhoto) {
             try {
                 console.log('   📸 Descargando imagen...');
                 const imageBuffer = await downloadImage(telegramPost.photo[telegramPost.photo.length - 1].file_id);
@@ -195,21 +218,25 @@ async function forwardToWhatsApp(telegramPost, groupKey) {
                 
                 await whatsappClient.sendMessage(whatsappGroup.id, media, { caption: message });
                 console.log(`   ✅ Imagen con texto reenviada a ${whatsappGroup.name} exitosamente`);
-                console.log(`   📝 Texto enviado: ${message.substring(0, 50)}...`);
+                if (hasText) {
+                    console.log(`   📝 Texto enviado: ${message.substring(0, 50)}...`);
+                }
             } catch (error) {
                 console.error('   ❌ Error enviando imagen:', error.message);
                 // Intentar enviar solo texto si falla la imagen
-                if (message) {
+                if (hasText) {
                     await whatsappClient.sendMessage(whatsappGroup.id, message);
                     console.log(`   ✅ Texto reenviado a ${whatsappGroup.name} exitosamente`);
                 }
             }
-        } else if (message) {
+        } else if (hasText) {
             // Solo texto
             await whatsappClient.sendMessage(whatsappGroup.id, message);
             console.log(`   ✅ Texto reenviado a ${whatsappGroup.name} exitosamente`);
-        } else {
-            console.log('   ⚠️ No se encontró texto ni imagen para reenviar');
+        } else if (hasDocument) {
+            console.log('   📄 Documento detectado (no soportado aún)');
+        } else if (hasVideo) {
+            console.log('   🎥 Video detectado (no soportado aún)');
         }
     } catch (error) {
         console.error('❌ Error reenviando mensaje:', error.message);
@@ -267,20 +294,30 @@ function setupTelegramListener() {
 }
 
 // Conectar bot de Telegram
-telegramBot.getMe().then((botInfo) => {
-    console.log('✅ Bot de Telegram conectado');
-    console.log(`👤 Nombre: ${botInfo.first_name}`);
-    console.log(`🔗 Username: ${botInfo.username}`);
-    console.log('');
-    
-    // Esperar un poco antes de configurar el listener
-    setTimeout(() => {
+async function initializeTelegramBot() {
+    try {
+        const botInfo = await telegramBot.getMe();
+        console.log('✅ Bot de Telegram conectado');
+        console.log(`👤 Nombre: ${botInfo.first_name}`);
+        console.log(`🔗 Username: ${botInfo.username}`);
+        console.log('');
+        
+        // Configurar listener
         setupTelegramListener();
-    }, 2000);
-}).catch((error) => {
-    console.error('❌ Error conectando bot de Telegram:', error.message);
-    process.exit(1);
-});
+        
+        // Iniciar polling manualmente
+        telegramBot.startPolling();
+        console.log('🔄 Polling iniciado');
+        
+    } catch (error) {
+        console.error('❌ Error conectando bot de Telegram:', error.message);
+        console.log('🔄 Reintentando en 30 segundos...');
+        setTimeout(initializeTelegramBot, 30000);
+    }
+}
+
+// Inicializar bot de Telegram
+initializeTelegramBot();
 
 // Configurar WhatsApp
 console.log('📱 Configurando WhatsApp...');
@@ -390,18 +427,51 @@ telegramBot.on('polling_error', (error) => {
             console.log('🔄 Reiniciando bot...');
             process.exit(0);
         }, 5000);
+    } else if (error.code === 'ETIMEDOUT' || error.message.includes('ETIMEDOUT')) {
+        console.log('⏰ Timeout detectado, reintentando en 10 segundos...');
+        setTimeout(() => {
+            console.log('🔄 Reintentando conexión...');
+            // No reiniciar el proceso, solo reintentar
+        }, 10000);
     } else {
         console.error('❌ Error de polling:', error.message);
+        // Para otros errores, esperar un poco antes de reintentar
+        setTimeout(() => {
+            console.log('🔄 Reintentando después de error...');
+        }, 15000);
     }
 });
 
-// Manejar errores no capturados
+// Mejorar manejo de errores no capturados
 process.on('uncaughtException', (error) => {
     console.error('❌ Error no capturado:', error.message);
-    // No salir del proceso
+    console.error('📋 Stack trace:', error.stack);
+    // No salir del proceso, solo loggear
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Promesa rechazada no manejada:', reason);
-    // No salir del proceso
+    // No salir del proceso, solo loggear
+});
+
+// Agregar heartbeat para mantener la conexión activa
+setInterval(() => {
+    if (whatsappReady) {
+        console.log('💓 Heartbeat: Bot funcionando correctamente');
+    }
+}, 300000); // Cada 5 minutos
+
+// Manejar señales de terminación
+process.on('SIGINT', () => {
+    console.log('🛑 Recibida señal SIGINT, cerrando bot...');
+    whatsappClient.destroy();
+    telegramBot.stopPolling();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('🛑 Recibida señal SIGTERM, cerrando bot...');
+    whatsappClient.destroy();
+    telegramBot.stopPolling();
+    process.exit(0);
 }); 
