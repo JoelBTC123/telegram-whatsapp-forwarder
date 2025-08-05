@@ -21,9 +21,21 @@ Thumbs.db
 .wwebjs_auth/
 .wwebjs_cache/
 
-# Archivos de debug
+# Archivos de debug y prueba
 debugToken.js
 getMyId.js
 getUserId.js
 testBot.js
-testMessages.js 
+testMessages.js
+testAnnouncements.js
+findAnnouncementsChannel.js
+testCommunityAccess.js
+findCommunityChannels.js
+createAnnouncementsGroup.js
+getWhatsAppCommunity.js
+debugCorrectBot.js
+checkBotToken.js
+testAllMessages.js
+debugGroups.js
+getGroupInfo.js
+checkWhatsApp.js 

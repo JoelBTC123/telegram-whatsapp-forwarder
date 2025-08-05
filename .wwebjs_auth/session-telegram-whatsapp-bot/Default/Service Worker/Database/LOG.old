@@ -1,3 +1,2 @@
-2025/07/30-22:53:29.913 f703 Reusing MANIFEST /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Service Worker/Database/MANIFEST-000001
-2025/07/30-22:53:29.914 f703 Recovering log #3
-2025/07/30-22:53:29.914 f703 Reusing old log /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Service Worker/Database/000003.log 
+2025/08/05-13:40:48.668 16803 Creating DB /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Service Worker/Database since it was missing.
+2025/08/05-13:40:48.690 16803 Reusing MANIFEST /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Service Worker/Database/MANIFEST-000001

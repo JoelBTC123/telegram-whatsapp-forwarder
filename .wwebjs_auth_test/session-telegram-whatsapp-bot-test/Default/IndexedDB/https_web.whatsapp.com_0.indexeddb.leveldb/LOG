@@ -1,0 +1,57 @@
+2025/08/05-13:29:11.723 8503 Reusing MANIFEST /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth_test/session-telegram-whatsapp-bot-test/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/08/05-13:29:11.723 8503 Recovering log #233
+2025/08/05-13:29:11.769 8503 Reusing old log /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth_test/session-telegram-whatsapp-bot-test/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000233.log 
+2025/08/05-13:29:14.583 b303 Level-0 table #240: started
+2025/08/05-13:29:14.601 b303 Level-0 table #240: 307351 bytes OK
+2025/08/05-13:29:14.612 b303 Delete type=0 #233
+2025/08/05-13:29:14.612 b303 Manual compaction at level-0 from '\x002\x00\x00\x00' @ 72057594037927935 : 1 .. '\x003\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/08/05-13:29:14.615 1f803 Level-0 table #242: started
+2025/08/05-13:29:14.619 1f803 Level-0 table #242: 446 bytes OK
+2025/08/05-13:29:14.629 1f803 Delete type=0 #239
+2025/08/05-13:29:14.629 1f803 Manual compaction at level-0 from '\x003\x00\x00\x00' @ 72057594037927935 : 1 .. '\x004\x00\x00\x00' @ 0 : 0; will stop at '\x003\x00\x00\x05' @ 1280123 : 0
+2025/08/05-13:29:14.629 1f803 Compacting 1@0 + 1@1 files
+2025/08/05-13:29:14.648 1f803 Generated table #243@0: 10877 keys, 186571 bytes
+2025/08/05-13:29:14.648 1f803 Compacted 1@0 + 1@1 files => 186571 bytes
+2025/08/05-13:29:14.656 1f803 compacted to: files[ 0 1 3 0 0 0 0 ]
+2025/08/05-13:29:14.656 1f803 Delete type=2 #242
+2025/08/05-13:29:14.656 1f803 Manual compaction at level-0 from '\x003\x00\x00\x05' @ 1280123 : 0 .. '\x004\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/08/05-13:29:17.290 1650b Compacting 1@1 + 3@2 files
+2025/08/05-13:29:17.364 1650b Generated table #244@1: 36812 keys, 2200273 bytes
+2025/08/05-13:29:17.436 1650b Generated table #245@1: 16519 keys, 2189201 bytes
+2025/08/05-13:29:17.636 1650b Generated table #246@1: 71431 keys, 2161475 bytes
+2025/08/05-13:29:17.636 1650b Compacted 1@1 + 3@2 files => 6550949 bytes
+2025/08/05-13:29:17.645 1650b compacted to: files[ 0 0 3 0 0 0 0 ]
+2025/08/05-13:29:17.646 1650b Delete type=2 #236
+2025/08/05-13:29:17.646 1650b Delete type=2 #237
+2025/08/05-13:29:17.646 1650b Delete type=2 #235
+2025/08/05-13:29:17.646 1650b Delete type=2 #240
+2025/08/05-13:29:17.646 1650b Delete type=2 #243
+2025/08/05-13:29:56.047 16703 Level-0 table #248: started
+2025/08/05-13:29:56.075 16703 Level-0 table #248: 1099955 bytes OK
+2025/08/05-13:29:56.086 16703 Delete type=0 #241
+2025/08/05-13:29:57.098 16703 Compacting 1@1 + 3@2 files
+2025/08/05-13:29:57.170 16703 Generated table #249@1: 38591 keys, 2203223 bytes
+2025/08/05-13:29:57.213 16703 Generated table #250@1: 15665 keys, 2187994 bytes
+2025/08/05-13:29:57.286 16703 Generated table #251@1: 68556 keys, 2216937 bytes
+2025/08/05-13:29:57.307 16703 Generated table #252@1: 19067 keys, 421177 bytes
+2025/08/05-13:29:57.307 16703 Compacted 1@1 + 3@2 files => 7029331 bytes
+2025/08/05-13:29:57.315 16703 compacted to: files[ 0 0 4 0 0 0 0 ]
+2025/08/05-13:29:57.315 16703 Delete type=2 #248
+2025/08/05-13:29:57.315 16703 Delete type=2 #246
+2025/08/05-13:29:57.315 16703 Delete type=2 #244
+2025/08/05-13:29:57.315 16703 Delete type=2 #245
+2025/08/05-13:30:36.916 1f303 Level-0 table #254: started
+2025/08/05-13:30:36.946 1f303 Level-0 table #254: 1036174 bytes OK
+2025/08/05-13:30:36.953 1f303 Delete type=0 #247
+2025/08/05-13:30:38.753 16703 Compacting 1@1 + 4@2 files
+2025/08/05-13:30:38.824 16703 Generated table #255@1: 38761 keys, 2201993 bytes
+2025/08/05-13:30:38.869 16703 Generated table #256@1: 15644 keys, 2188070 bytes
+2025/08/05-13:30:38.942 16703 Generated table #257@1: 61425 keys, 2206466 bytes
+2025/08/05-13:30:38.977 16703 Generated table #258@1: 37455 keys, 823525 bytes
+2025/08/05-13:30:38.978 16703 Compacted 1@1 + 4@2 files => 7420054 bytes
+2025/08/05-13:30:38.985 16703 compacted to: files[ 0 0 4 0 0 0 0 ]
+2025/08/05-13:30:38.986 16703 Delete type=2 #249
+2025/08/05-13:30:38.986 16703 Delete type=2 #254
+2025/08/05-13:30:38.986 16703 Delete type=2 #252
+2025/08/05-13:30:38.986 16703 Delete type=2 #250
+2025/08/05-13:30:38.986 16703 Delete type=2 #251

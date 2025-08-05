@@ -120,6 +120,8 @@ const telegramBot = new TelegramBot(TELEGRAM_TOKEN, {
 // Variables globales
 let whatsappReady = false;
 let whatsappGroups = {};
+let announcementsGroup = null; // Grupo de anuncios de WhatsApp
+let alternativeGroup = null; // Grupo alternativo de anuncios
 
 // Función para descargar imagen
 async function downloadImage(fileId) {
@@ -139,6 +141,57 @@ async function downloadImage(fileId) {
         console.error('❌ Error descargando imagen:', error.message);
         throw error;
     }
+}
+
+// Función para convertir formato de Telegram a HTML de WhatsApp
+function convertTelegramFormatToWhatsApp(text, entities) {
+    if (!entities || entities.length === 0) {
+        return text;
+    }
+    
+    // Ordenar entidades por posición de inicio (descendente para no afectar índices)
+    const sortedEntities = [...entities].sort((a, b) => b.offset - a.offset);
+    
+    let formattedText = text;
+    
+    for (const entity of sortedEntities) {
+        const start = entity.offset;
+        const end = entity.offset + entity.length;
+        const substring = text.substring(start, end);
+        
+        let formattedSubstring = substring;
+        
+        switch (entity.type) {
+            case 'bold':
+                formattedSubstring = `*${substring}*`;
+                break;
+            case 'italic':
+                formattedSubstring = `_${substring}_`;
+                break;
+            case 'code':
+                formattedSubstring = `\`${substring}\``;
+                break;
+            case 'pre':
+                formattedSubstring = `\`\`\`${substring}\`\`\``;
+                break;
+            case 'underline':
+                formattedSubstring = `~${substring}~`;
+                break;
+            case 'strikethrough':
+                formattedSubstring = `~${substring}~`;
+                break;
+            case 'text_link':
+                formattedSubstring = `[${substring}](${entity.url})`;
+                break;
+            default:
+                // Para otros tipos, mantener el texto sin formato
+                break;
+        }
+        
+        formattedText = formattedText.substring(0, start) + formattedSubstring + formattedText.substring(end);
+    }
+    
+    return formattedText;
 }
 
 // Función para encontrar la clave del grupo
@@ -167,6 +220,32 @@ async function configureWhatsAppGroups() {
             }
         }
         
+        // Configurar grupo de anuncios si está habilitado
+        if (config.ANNOUNCEMENTS && config.ANNOUNCEMENTS.enabled) {
+            try {
+                const announcementsChat = await whatsappClient.getChatById(config.ANNOUNCEMENTS.destination_group.whatsapp_id);
+                announcementsGroup = {
+                    id: config.ANNOUNCEMENTS.destination_group.whatsapp_id,
+                    name: config.ANNOUNCEMENTS.destination_group.whatsapp_name,
+                    chat: announcementsChat
+                };
+                console.log(`✅ Grupo principal de anuncios configurado: ${config.ANNOUNCEMENTS.destination_group.whatsapp_name}`);
+                
+                // Configurar grupo alternativo si existe
+                if (config.ANNOUNCEMENTS.alternative_group) {
+                    const alternativeChat = await whatsappClient.getChatById(config.ANNOUNCEMENTS.alternative_group.whatsapp_id);
+                    alternativeGroup = {
+                        id: config.ANNOUNCEMENTS.alternative_group.whatsapp_id,
+                        name: config.ANNOUNCEMENTS.alternative_group.whatsapp_name,
+                        chat: alternativeChat
+                    };
+                    console.log(`✅ Grupo alternativo de anuncios configurado: ${config.ANNOUNCEMENTS.alternative_group.whatsapp_name}`);
+                }
+            } catch (error) {
+                console.error(`❌ Error configurando grupo de anuncios:`, error.message);
+            }
+        }
+        
         console.log(`🎉 ${Object.keys(whatsappGroups).length} grupos configurados correctamente`);
     } catch (error) {
         console.error('❌ Error en configuración automática:', error.message);
@@ -184,12 +263,23 @@ async function forwardToWhatsApp(telegramPost, groupKey) {
             return;
         }
 
-        // Construir mensaje
+        // Construir mensaje con formato HTML
         let message = '';
+        let hasHtmlFormatting = false;
+        
         if (telegramPost.text) {
             message = telegramPost.text.trim();
+            hasHtmlFormatting = telegramPost.entities && telegramPost.entities.length > 0;
         } else if (telegramPost.caption) {
             message = telegramPost.caption.trim();
+            hasHtmlFormatting = telegramPost.caption_entities && telegramPost.caption_entities.length > 0;
+        }
+
+        // Aplicar formato HTML si existe
+        if (hasHtmlFormatting) {
+            const entities = telegramPost.entities || telegramPost.caption_entities;
+            message = convertTelegramFormatToWhatsApp(message, entities);
+            console.log(`   🎨 Formato HTML aplicado`);
         }
 
         console.log(`📤 Reenviando mensaje a ${whatsappGroup.name}...`);
@@ -207,6 +297,9 @@ async function forwardToWhatsApp(telegramPost, groupKey) {
 
         if (hasText) {
             console.log(`   📝 Texto: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`);
+            if (hasHtmlFormatting) {
+                console.log(`   🎨 Con formato HTML`);
+            }
         }
 
         // Verificar si hay foto
@@ -243,6 +336,111 @@ async function forwardToWhatsApp(telegramPost, groupKey) {
     }
 }
 
+// Función para reenviar anuncios a WhatsApp
+async function forwardAnnouncementToWhatsApp(telegramMessage) {
+    try {
+        // Verificar si es una respuesta y si debemos ignorarla
+        if (telegramMessage.reply_to_message && !config.ANNOUNCEMENTS.settings.forward_replies) {
+            console.log('   ⚠️ Ignorando respuesta a mensaje');
+            return;
+        }
+
+        // Verificar si el usuario está autorizado (si se especificó lista)
+        if (config.ANNOUNCEMENTS.settings.allowed_users.length > 0 && telegramMessage.from) {
+            const userId = telegramMessage.from.id.toString();
+            if (!config.ANNOUNCEMENTS.settings.allowed_users.includes(userId)) {
+                console.log(`   ⚠️ Usuario ${telegramMessage.from.first_name} no autorizado para enviar anuncios`);
+                return;
+            }
+        }
+
+        // Construir mensaje con formato HTML
+        let message = '';
+        let hasHtmlFormatting = false;
+        
+        if (telegramMessage.text) {
+            message = telegramMessage.text.trim();
+            hasHtmlFormatting = telegramMessage.entities && telegramMessage.entities.length > 0;
+        } else if (telegramMessage.caption) {
+            message = telegramMessage.caption.trim();
+            hasHtmlFormatting = telegramMessage.caption_entities && telegramMessage.caption_entities.length > 0;
+        }
+
+        // Aplicar formato HTML si existe
+        if (hasHtmlFormatting) {
+            const entities = telegramMessage.entities || telegramMessage.caption_entities;
+            message = convertTelegramFormatToWhatsApp(message, entities);
+            console.log(`   🎨 Formato HTML aplicado`);
+        }
+
+        // Agregar prefijo si está habilitado
+        if (config.ANNOUNCEMENTS.settings.add_prefix && message) {
+            message = `${config.ANNOUNCEMENTS.settings.prefix_text}\n\n${message}`;
+        }
+
+        console.log(`📢 Reenviando anuncio a ambos grupos de TRADIFY...`);
+        
+        // Determinar nombre del remitente
+        const senderName = telegramMessage.from ? 
+            `${telegramMessage.from.first_name} ${telegramMessage.from.last_name || ''}` : 
+            'Canal';
+        console.log(`   👤 De: ${senderName}`);
+        
+        // Verificar si hay contenido para enviar
+        const hasText = message && message.length > 0;
+        const hasPhoto = telegramMessage.photo && telegramMessage.photo.length > 0;
+        const hasDocument = telegramMessage.document;
+        const hasVideo = telegramMessage.video;
+        
+        if (!hasText && !hasPhoto && !hasDocument && !hasVideo) {
+            console.log('   ⚠️ No se encontró contenido para reenviar');
+            return;
+        }
+
+        if (hasText) {
+            console.log(`   📝 Texto: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`);
+            if (hasHtmlFormatting) {
+                console.log(`   🎨 Con formato HTML`);
+            }
+        }
+
+        // Función para enviar a un grupo específico
+        async function sendToGroup(group, groupName) {
+            try {
+                if (hasPhoto && config.ANNOUNCEMENTS.settings.forward_media) {
+                    console.log(`   📸 Descargando imagen para ${groupName}...`);
+                    const imageBuffer = await downloadImage(telegramMessage.photo[telegramMessage.photo.length - 1].file_id);
+                    const media = new MessageMedia('image/jpeg', imageBuffer.toString('base64'));
+                    
+                    await whatsappClient.sendMessage(group.id, media, { caption: message });
+                    console.log(`   ✅ Anuncio con imagen enviado a ${groupName}`);
+                } else if (hasText) {
+                    await whatsappClient.sendMessage(group.id, message);
+                    console.log(`   ✅ Anuncio de texto enviado a ${groupName}`);
+                } else if (hasDocument && config.ANNOUNCEMENTS.settings.forward_media) {
+                    console.log(`   📄 Documento detectado en ${groupName} (no soportado aún)`);
+                } else if (hasVideo && config.ANNOUNCEMENTS.settings.forward_media) {
+                    console.log(`   🎥 Video detectado en ${groupName} (no soportado aún)`);
+                }
+            } catch (error) {
+                console.error(`   ❌ Error enviando a ${groupName}:`, error.message);
+            }
+        }
+
+        // Enviar al grupo principal
+        if (announcementsGroup) {
+            await sendToGroup(announcementsGroup, announcementsGroup.name);
+        }
+
+        // Enviar al grupo alternativo
+        if (alternativeGroup) {
+            await sendToGroup(alternativeGroup, alternativeGroup.name);
+        }
+    } catch (error) {
+        console.error('❌ Error reenviando anuncio:', error.message);
+    }
+}
+
 // Configurar escucha de Telegram
 function setupTelegramListener() {
     console.log('📢 Configurando escucha de mensajes del grupo...');
@@ -256,6 +454,11 @@ function setupTelegramListener() {
             if (groupKey && whatsappReady && whatsappGroups[groupKey]) {
                 console.log(`✅ Grupo configurado detectado: ${message.chat.title}`);
                 await forwardToWhatsApp(message, groupKey);
+            } else if (config.ANNOUNCEMENTS && config.ANNOUNCEMENTS.enabled && 
+                       message.chat.title === config.ANNOUNCEMENTS.source_group.telegram_name &&
+                       whatsappReady && (announcementsGroup || alternativeGroup)) {
+                console.log(`📢 Grupo de anuncios detectado: ${message.chat.title}`);
+                await forwardAnnouncementToWhatsApp(message);
             } else {
                 console.log(`⚠️ Grupo no configurado o WhatsApp no listo: ${message.chat.title}`);
             }
@@ -272,6 +475,11 @@ function setupTelegramListener() {
         if (groupKey && whatsappReady && whatsappGroups[groupKey]) {
             console.log(`✅ Grupo configurado detectado en channel_post: ${post.chat.title}`);
             await forwardToWhatsApp(post, groupKey);
+        } else if (config.ANNOUNCEMENTS && config.ANNOUNCEMENTS.enabled && 
+                   post.chat.title === config.ANNOUNCEMENTS.source_group.telegram_name &&
+                   whatsappReady && (announcementsGroup || alternativeGroup)) {
+            console.log(`📢 Canal de anuncios detectado: ${post.chat.title}`);
+            await forwardAnnouncementToWhatsApp(post);
         } else {
             console.log(`⚠️ Grupo no configurado o WhatsApp no listo: ${post.chat.title}`);
         }
@@ -285,6 +493,11 @@ function setupTelegramListener() {
         if (groupKey && whatsappReady && whatsappGroups[groupKey]) {
             console.log(`✅ Grupo configurado detectado en edited_channel_post: ${post.chat.title}`);
             await forwardToWhatsApp(post, groupKey);
+        } else if (config.ANNOUNCEMENTS && config.ANNOUNCEMENTS.enabled && 
+                   post.chat.title === config.ANNOUNCEMENTS.source_group.telegram_name &&
+                   whatsappReady && (announcementsGroup || alternativeGroup)) {
+            console.log(`📢 Canal de anuncios detectado (editado): ${post.chat.title}`);
+            await forwardAnnouncementToWhatsApp(post);
         } else {
             console.log(`⚠️ Grupo no configurado o WhatsApp no listo: ${post.chat.title}`);
         }

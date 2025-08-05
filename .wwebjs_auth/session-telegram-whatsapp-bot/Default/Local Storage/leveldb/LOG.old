@@ -1,3 +1,2 @@
-2025/07/30-22:53:29.785 8a03 Reusing MANIFEST /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Local Storage/leveldb/MANIFEST-000001
-2025/07/30-22:53:29.786 8a03 Recovering log #3
-2025/07/30-22:53:29.786 8a03 Reusing old log /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Local Storage/leveldb/000003.log 
+2025/08/05-13:40:45.364 9d03 Creating DB /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Local Storage/leveldb since it was missing.
+2025/08/05-13:40:45.378 9d03 Reusing MANIFEST /Users/macbook2019/Desktop/FOWARD/.wwebjs_auth/session-telegram-whatsapp-bot/Default/Local Storage/leveldb/MANIFEST-000001
